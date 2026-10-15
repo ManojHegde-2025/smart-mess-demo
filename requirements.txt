@@ -13,3 +13,5 @@ pydantic>=2.0
 # sqlalchemy psycopg2-binary  # HISTORY_SOURCE=postgres (Supabase)
 pytest>=7.4
 httpx>=0.26
+sqlalchemy>=2.0
+psycopg[binary]>=3.2
