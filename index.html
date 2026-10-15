@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Smart Mess</title><script>try{document.documentElement.dataset.theme=localStorage.getItem("sm_theme")||"light"}catch(e){}</script>
+<style>
+:root{--bg:#F8FAFC;--card:#FFFFFF;--pri:#1E3A5F;--sec:#475569;--tx:#0F172A;--mut:#64748B;--bd:#E2E8F0;--ok:#16A34A;--wn:#F59E0B;--er:#DC2626;--onpri:#fff;--okbg:#DCFCE7;--wnbg:#FEF3C7;--erbg:#FEE2E2;--wtx:#B45309;--dbg:#FEF3C7;--dtx:#92400E}
+[data-theme=dark]{color-scheme:dark;--bg:#0F172A;--card:#1E293B;--pri:#60A5FA;--sec:#94A3B8;--tx:#F8FAFC;--mut:#CBD5E1;--bd:#334155;--ok:#4ADE80;--wn:#FBBF24;--er:#F87171;--onpri:#0F172A;--okbg:#14532D;--wnbg:#422006;--erbg:#450A0A;--wtx:#FBBF24;--dbg:#422006;--dtx:#FDE68A}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--tx);line-height:1.5;overflow-x:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--pri);outline-offset:2px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(15,23,42,.06)}
+.btn{background:var(--pri);color:var(--onpri);border:0;border-radius:8px;padding:10px 16px;cursor:pointer;min-height:42px;font-weight:600;position:relative;overflow:hidden;transition:transform .2s ease,box-shadow .2s ease,filter .2s ease}.btn:hover{transform:translateY(-2px);box-shadow:0 7px 18px rgba(30,58,95,.18);filter:brightness(1.04)}.btn:active{transform:translateY(0) scale(.98)}
+.btn.o{background:var(--card);color:var(--pri);border:1px solid var(--bd)}.btn.r{background:var(--er)}.btn.g{background:var(--ok)}
+input,select,textarea{width:100%;border:1px solid var(--bd);border-radius:8px;padding:10px;background:var(--card);min-height:42px}
+label{font-size:14px;font-weight:600;display:block;margin:12px 0 4px}
+.mut{color:var(--mut);font-size:14px}.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.big{font-size:28px;font-weight:700;color:var(--pri)}
+.tag{display:inline-block;padding:2px 10px;border-radius:99px;font-size:12px;font-weight:600}
+.t-ok{background:var(--okbg);color:var(--ok)}.t-wn{background:var(--wnbg);color:var(--wtx)}.t-er{background:var(--erbg);color:var(--er)}.t-n{background:var(--bd);color:var(--sec)}
+.demo{background:var(--dbg);color:var(--dtx);border-radius:8px;padding:8px 12px;font-size:13px;margin-bottom:12px}
+#login{min-height:100vh;display:grid;place-items:center;padding:16px;perspective:1000px;background:radial-gradient(ellipse at top,rgba(96,165,250,.10),transparent 55%)}
+#login .card{max-width:400px;width:100%;padding:28px;animation:loginEnter .65s cubic-bezier(.2,.75,.25,1) both;transition:transform .3s ease,box-shadow .3s ease,border-color .3s ease}#login .card:hover{transform:translateY(-5px);box-shadow:0 18px 45px rgba(15,23,42,.13);border-color:color-mix(in srgb,var(--pri) 35%,var(--bd))}@keyframes loginEnter{from{opacity:0;transform:translateY(18px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}#login .logo{transition:transform .35s ease,box-shadow .35s ease}#login .card:hover .logo{transform:rotate(-7deg) scale(1.06);box-shadow:0 8px 22px rgba(30,58,95,.2)}#login input{transition:border-color .2s ease,box-shadow .2s ease,transform .2s ease}#login input:focus{border-color:var(--pri);box-shadow:0 0 0 4px color-mix(in srgb,var(--pri) 15%,transparent);transform:translateY(-1px)}
+.logo{width:56px;height:56px;border-radius:50%;background:var(--pri);color:var(--onpri);display:grid;place-items:center;font-size:26px;margin:0 auto 8px}
+.roles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0}
+.role{border:2px solid var(--bd);background:var(--card);border-radius:10px;padding:10px;cursor:pointer;font-weight:600;transition:transform .2s ease,border-color .2s ease,background .2s ease,box-shadow .2s ease}.role:hover{transform:translateY(-2px);border-color:var(--pri);box-shadow:0 5px 14px rgba(30,58,95,.10)}.role:active{transform:scale(.98)}
+.role.on{border-color:var(--pri);background:var(--pri);color:var(--onpri)}
+.err{color:var(--er);font-size:13px;min-height:18px}
+#app{display:none}
+aside{position:fixed;inset:0 auto 0 0;width:250px;background:var(--card);border-right:1px solid var(--bd);display:flex;flex-direction:column;z-index:30;transition:transform .25s}
+aside .top{padding:16px;font-weight:700;color:var(--pri);display:flex;justify-content:space-between;align-items:center}
+aside nav{flex:1;overflow-y:auto;padding:0 8px}
+aside nav button{display:block;width:100%;text-align:left;background:none;border:0;padding:10px 12px;border-radius:8px;cursor:pointer;color:var(--sec);min-height:42px;position:relative;transition:background .24s ease,color .24s ease,padding-left .24s ease,transform .24s ease,box-shadow .24s ease}aside nav button:hover:not(.on){background:var(--bg);color:var(--tx);padding-left:18px;transform:translateX(2px)}
+aside nav button.on{background:var(--pri);color:var(--onpri);box-shadow:0 4px 12px rgba(30,58,95,.16)}aside nav button.on:focus-visible{outline-offset:3px}
+aside .bot{padding:12px;border-top:1px solid var(--bd)}
+#x,#ham{display:none}.hb{width:44px;padding:0;position:relative}.hb i{position:absolute;left:12px;right:12px;height:2px;background:var(--tx);border-radius:2px;transition:transform .3s,opacity .2s,top .3s}.hb i:nth-child(1){top:14px}.hb i:nth-child(2){top:20px}.hb i:nth-child(3){top:26px}.hb.open i:nth-child(1){top:20px;transform:rotate(45deg)}.hb.open i:nth-child(2){opacity:0}.hb.open i:nth-child(3){top:20px;transform:rotate(-45deg)}
+#ov{opacity:0;pointer-events:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:20;transition:opacity .3s}#ov.open{opacity:1;pointer-events:auto}body.lock{overflow:hidden}
+main{margin-left:250px;min-height:100vh;display:flex;flex-direction:column}
+header{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--bd);padding:10px 20px;display:flex;gap:12px;align-items:center;justify-content:space-between;transition:transform .25s}
+header.hide{transform:translateY(-100%)}
+#pg{padding:20px;flex:1;max-width:1100px;width:100%}
+h1{font-size:24px;margin-bottom:4px}h2{font-size:17px;margin-bottom:8px}
+.mt{margin-top:16px}
+footer{border-top:1px solid var(--bd);padding:16px 20px;font-size:13px;color:var(--mut)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:8px;border-bottom:1px solid var(--bd)}th{color:var(--mut);font-weight:600}
+.tw{overflow-x:auto}
+.stars button{background:none;border:0;font-size:30px;cursor:pointer;color:var(--bd);min-width:44px;min-height:44px}.stars button.on{color:var(--wn)}
+.scanbox{border:2px dashed var(--pri);border-radius:12px;height:200px;display:grid;place-items:center;color:var(--mut);margin:12px 0;text-align:center}
+.res{border-radius:12px;padding:20px;text-align:center;color:var(--onpri);margin-top:12px}.res.ok{background:var(--ok)}.res.bad{background:var(--er)}
+.bar{background:var(--bd);border-radius:6px;height:12px;overflow:hidden}.bar i{display:block;height:100%;background:var(--pri)}
+.card{transition:box-shadow .2s}.card:hover{box-shadow:0 6px 16px rgba(15,23,42,.14)}.rv{opacity:0;transform:translateY(14px);transition:opacity .45s ease,transform .45s ease,box-shadow .2s}.rv.in{opacity:1;transform:none}#pg.fade{animation:pf .32s cubic-bezier(.2,.7,.25,1)}@keyframes pf{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media(max-width:800px){
+aside{transform:translateX(-100%)}aside.open{transform:none}#x,#ham{display:inline-block}
+main{margin-left:0}
+table.rs thead{display:none}table.rs tr{display:block;border:1px solid var(--bd);border-radius:10px;margin-bottom:8px;padding:6px}
+table.rs td{display:flex;justify-content:space-between;border:0;padding:4px 8px}table.rs td::before{content:attr(data-l);color:var(--mut)}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important;scroll-behavior:auto!important}.rv{opacity:1!important;transform:none!important}}
+</style>
+<link rel="stylesheet" href="web/dashboard.css"></head><body>
+<div id="login"><div class="card">
+<div class="logo">🍴</div><h1 style="text-align:center">Smart Mess</h1><p class="mut" style="text-align:center">Efficient meals, better tomorrow</p>
+<div class="roles" role="radiogroup" aria-label="Role">
+<button class="role on" id="r-student" onclick="setRole('student')" role="radio" aria-checked="true">Hostel Student</button>
+<button class="role" id="r-chief" onclick="setRole('chief')" role="radio" aria-checked="false">Mess Chief</button></div>
+<label id="idl" for="uid">Student ID / USN</label><input id="uid" autocomplete="username" placeholder="Student ID">
+<label for="pw">Password</label><div class="row" style="flex-wrap:nowrap"><input id="pw" type="password" autocomplete="current-password"><button class="btn o" onclick="pw.type=pw.type=='password'?'text':'password'" aria-label="Show or hide password">👁</button></div>
+<p class="err" id="lerr"></p>
+<button class="btn" style="width:100%" onclick="doLogin()">Sign In</button>
+<p class="mut mt">Demo sign-in only: any ID and a password of 4+ characters works. This is not secure authentication; the backend must enforce roles.</p>
+</div></div>
+
+<div id="app">
+<div id="ov" onclick="menu(0)"></div>
+<aside id="side"><div class="top"><span>🍴 Smart Mess</span><button class="btn o" id="x" onclick="menu(0)" aria-label="Close menu">✕</button></div>
+<nav id="nav"></nav>
+<div class="bot"><div class="mut" id="who"></div><button class="btn o" style="width:100%;margin-top:8px" onclick="logout()">Logout</button></div></aside>
+<main><header id="hd"><div class="row"><button class="btn o hb" id="ham" onclick="menu(!$('side').classList.contains('open'))" aria-label="Toggle menu" aria-expanded="false"><i></i><i></i><i></i></button><b id="ttl"></b></div>
+<div class="row"><span class="mut" id="dt"></span><select id="msel" style="width:auto" aria-label="Mess" onchange="S.mess=this.value;save();go(S.page)"><option>North Mess</option><option>South Mess</option></select><button class="btn o" id="th" onclick="toggleTheme()" aria-label="Toggle dark mode"></button></div></header>
+<div id="pg"></div>
+<footer>Smart Mess · Quick links: Dashboard, Help · Support: messhelp@college.example · © 2026 Smart Mess</footer></main></div>
+
+<script src="web/config.js"></script>
+<script src="web/calc.js"></script>
+<script src="web/api.js"></script>
+<script src="web/charts.js"></script>
+<script src="web/dashboard.js"></script>
+<script>
+const $=id=>document.getElementById(id),esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const M=['Breakfast','Lunch','Snacks','Dinner'],WIN={Breakfast:[450,525],Lunch:[720,825],Snacks:[990,1050],Dinner:[1170,1245]};
+const WT={Breakfast:'7:30–8:45 AM',Lunch:'12:00–1:45 PM',Snacks:'4:30–5:30 PM',Dinner:'7:30–8:45 PM'};
+const CATS=['Food Quality','Taste','Hygiene','Portion Size','Menu Variety','Service'],LBL=['Poor','Fair','Good','Very Good','Excellent'];
+const ME={id:'NN25CSE290',name:'Aarush',dept:'CSE (sample)',year:'2nd Year (sample)',block:'Not set',plan:'Annual Hosteller (sample)'};
+const localDate=d=>{const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}`};
+const today=()=>localDate(new Date()),nowMin=()=>{const d=new Date();return d.getHours()*60+d.getMinutes()};
+const seed=()=>({menus:{'North Mess|Breakfast':['Idli','Sambar','Chutney'],'North Mess|Lunch':['Rice','Dal','Paneer curry','Curd'],'North Mess|Snacks':['Samosa','Tea'],'North Mess|Dinner':['Chapati','Veg kurma','Rice'],
+'South Mess|Breakfast':['Dosa','Chutney','Coffee'],'South Mess|Lunch':['Rice','Rasam','Poriyal','Buttermilk'],'South Mess|Snacks':['Bonda','Tea'],'South Mess|Dinner':['Pulao','Raita','Gobi fry']},
+att:[['NN25CSE290','Aarush','Lunch','South Mess','ok',-1],['NN25CSE102','Rahul Shetty','Lunch','South Mess','ok',-1],['NN25ECE011','Pooja K','Breakfast','North Mess','ok',-1],['NN25ME043','Sagar R','Dinner','North Mess','rej',-1],['NN25CSE143','Sankeerth M','Dinner','South Mess','ok',-2]].map(a=>({id:a[0],name:a[1],meal:a[2],mess:a[3],st:a[4],t:Date.now()+a[5]*864e5})),
+fb:[],inv:[{m:'North Mess',n:'Rice',q:120,u:'kg',min:80},{m:'North Mess',n:'Dal',q:25,u:'kg',min:30},{m:'South Mess',n:'Rice',q:150,u:'kg',min:80},{m:'South Mess',n:'Oil',q:12,u:'L',min:20}],
+stu:[['NN25CSE290','Aarush','CSE'],['NN25CSE102','Rahul Shetty','CSE'],['NN25ECE011','Pooja K','ECE'],['NN25ME043','Sagar R','ME'],['NN25CSE143','Sankeerth M','CSE']]});
+let DB=JSON.parse(localStorage.getItem('sm_db')||'null')||seed(),S=JSON.parse(localStorage.getItem('sm_s')||'{"role":null,"mess":"North Mess","page":"dash"}');
+const save=()=>{localStorage.setItem('sm_db',JSON.stringify(DB));localStorage.setItem('sm_s',JSON.stringify(S))};
+// migrate only the old demo student's records to Aarush
+DB.att.forEach(a=>{if(a.id=='NN25CSE198'&&a.name=='Devraj Bhaskar Moolya'){a.id=ME.id;a.name=ME.name}});DB.fb.forEach(f=>{if(f.sid=='NN25CSE198')f.sid=ME.id});DB.stu.forEach(x=>{if(x[0]=='NN25CSE198'&&x[1]=='Devraj Bhaskar Moolya'){x[0]=ME.id;x[1]=ME.name}});save();
+const NAV={student:[['dash','Dashboard'],['scan','Scan QR'],['hist','Meal History'],['fb','Menu Feedback'],['prof','My Profile'],['set','Settings'],['help','Help']],
+chief:[['dash','Dashboard'],['menu','Menu Management'],['att','Meal Attendance'],['stu','Student Records'],['fb','Menu Feedback'],['inv','Inventory Management'],['pred','Meal Demand Prediction'],['rep','Reports'],['set','Settings']]};
+let lr='student';
+function setRole(r){lr=r;$('r-student').classList.toggle('on',r=='student');$('r-chief').classList.toggle('on',r=='chief');$('r-student').setAttribute('aria-checked',r=='student');$('r-chief').setAttribute('aria-checked',r=='chief');$('idl').textContent=r=='student'?'Student ID / USN':'Mess Chief ID';$('uid').placeholder=r=='student'?'Student ID':'Mess Chief ID'}
+async function doLogin(){if(!$('uid').value.trim()||$('pw').value.length<4){$('lerr').textContent='Enter your '+(lr=='student'?'Student ID':'Mess Chief ID')+' and a password of at least 4 characters.';return}
+if(lr=='chief'&&!(window.SMART_MESS_CONFIG&&SMART_MESS_CONFIG.demo)){try{await SmartMessApi.auth.login(SMART_MESS_CONFIG.apiBase,$('uid').value.trim().toUpperCase(),$('pw').value)}catch(e){$('lerr').textContent=e.message;return}}
+S.role=lr;S.uid=$('uid').value.trim().toUpperCase();S.page='dash';save();start()}
+function logout(){S.role=null;save();SmartMessApi.auth.signOut();location.reload()}
+function applyStudentIdentity(){const id=(S.uid||ME.id).toUpperCase();const rec=DB.stu.find(x=>String(x[0]).toUpperCase()===id);ME.id=id;ME.name=rec?rec[1]:'Demo Student';ME.dept=rec?rec[2]:'CSE (sample)';ME.year='Sample';ME.block='Not set';ME.plan='Annual Hosteller (sample)'}
+function start(){if(!S.role)return;if(S.role=='student'&&S.uid)applyStudentIdentity();$('login').style.display='none';$('app').style.display='block';$('msel').value=S.mess;
+$('who').textContent=S.role=='student'?ME.name+' · '+ME.id:'Mess Chief · '+esc(S.uid||'demo');thLbl();go(S.page)}
+function menu(o){o=!!o;$('side').classList.toggle('open',o);$('ov').classList.toggle('open',o);$('ham').classList.toggle('open',o);$('ham').setAttribute('aria-expanded',o);document.body.classList.toggle('lock',o);if(o)$('hd').classList.remove('hide')}
+function thLbl(){const b=$('th');if(b)b.textContent=document.documentElement.dataset.theme=='dark'?'☀️':'🌙'}
+function toggleTheme(){const d=document.documentElement,n=d.dataset.theme=='dark'?'light':'dark';d.dataset.theme=n;try{localStorage.setItem('sm_theme',n)}catch(e){}thLbl();if(S.page=='set')go('set')}
+function go(p){if(!NAV[S.role].some(n=>n[0]==p))p='dash';S.page=p;save();menu(0);
+$('nav').innerHTML=NAV[S.role].map(n=>`<button class="${n[0]==p?'on':''}" onclick="go('${n[0]}')">${n[1]}</button>`).join('');
+$('ttl').textContent=NAV[S.role].find(n=>n[0]==p)[1];$('dt').textContent=new Date().toDateString();
+$('pg').innerHTML=(P[S.role][p]||(()=>'<p>Coming soon.</p>'))();window.scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});if(A[p])A[p]();const pg=$('pg');pg.classList.remove('fade');void pg.offsetWidth;pg.classList.add('fade');reveal()}
+const tag=(c,t)=>`<span class="tag t-${c}">${t}</span>`,fmt=t=>new Date(t).toLocaleString([], {dateStyle:'medium',timeStyle:'short'});
+const tbl=(h,rows)=>rows.length?`<div class="tw"><table class="rs"><thead><tr>${h.map(x=>'<th>'+x+'</th>').join('')}</tr></thead><tbody>${rows.map(r=>'<tr>'+r.map((c,i)=>`<td data-l="${h[i]}">${c}</td>`).join('')+'</tr>').join('')}</tbody></table></div>`:'<p class="mut">Nothing to show yet.</p>';
+const mine=()=>DB.att.filter(a=>a.id==ME.id);
+const done=m=>mine().some(a=>a.meal==m&&a.st=='ok'&&localDate(new Date(a.t))==today());
+const mstat=m=>done(m)?['ok','Taken']:nowMin()>WIN[m][1]?['er','Closed']:nowMin()>=WIN[m][0]?['wn','Open now']:['n','Upcoming'];
+const menuOf=(mess,m,d)=>DB.menus[mess+'|'+d+'|'+m]||DB.menus[mess+'|'+m]||[];
+const demo=t=>`<div class="demo">Demo: ${t}</div>`;
+let draft=null,rate=0,A={};
+const P={student:{
+dash(){const wk=mine().filter(a=>a.st=='ok'&&Date.now()-a.t<6048e5).length,td=mine().filter(a=>a.st=='ok'&&localDate(new Date(a.t))==today()).length,h=new Date().getHours();
+return`<h1>Good ${h<12?'morning':h<17?'afternoon':'evening'}, ${ME.name.split(' ')[0]}</h1><p class="mut">${ME.id} · ${ME.dept} · ${ME.year} · ${S.mess}</p>${demo('student data and meal records are sample data stored in this browser.')}
+<div class="grid"><div class="card"><div class="mut">Meals today</div><div class="big">${td}</div></div><div class="card"><div class="mut">Meals this week</div><div class="big">${wk}</div></div><div class="card"><div class="mut">Selected mess</div><div class="big" style="font-size:20px">${S.mess}</div><button class="btn mt" onclick="go('scan')">Scan QR</button></div></div>
+<h2 class="mt">Today's meals</h2><div class="grid">${M.map(m=>{const s=mstat(m);return`<div class="card"><b>${m}</b> ${tag(s[0],s[1])}<div class="mut">${WT[m]}</div><div style="margin-top:6px;font-size:14px">${esc(menuOf(S.mess,m,today()).join(', ')||'Menu not published')}</div></div>`}).join('')}</div>
+<h2 class="mt">Recent meals</h2><div class="card">${hist(mine().filter(a=>a.mess==S.mess).slice(-4).reverse())}</div>`},
+scan(){return`<h1>Scan QR</h1>${demo('this is a simulation. No camera scanning or server verification exists yet. In the real flow, you scan the QR shown at the mess counter and the backend validates it.')}
+<div class="card" style="max-width:480px"><label for="sm">Meal</label><select id="sm">${M.map(m=>`<option>${m}</option>`).join('')}</select>
+<label><input type="checkbox" id="ign" checked style="width:auto;min-height:0"> Ignore meal window (demo)</label>
+<div class="scanbox">Camera area (simulated)<br>${S.mess}</div>
+<div class="row"><button class="btn g" onclick="sim(1)">Simulate valid scan</button><button class="btn r" onclick="sim(0)">Simulate invalid QR</button></div><div id="sr"></div></div>`},
+hist(){return`<h1>Meal History</h1><p class="mut">${S.mess}</p><div class="card mt">${hist(mine().filter(a=>a.mess==S.mess).reverse())}</div>`},
+fb(){const l=DB.fb.filter(f=>f.sid==ME.id).reverse();rate=0;
+return`<h1>Menu Feedback</h1><p class="mut">${S.mess}</p>${demo('feedback is saved in this browser only. It reaches the Mess Chief portal only on this device until a shared backend exists.')}
+<div class="card" style="max-width:560px"><label for="fmess">Mess</label><select id="fmess">${['North Mess','South Mess'].map(m=>`<option ${m==S.mess?'selected':''}>${m}</option>`).join('')}</select><label for="fm">Meal</label><select id="fm">${M.map(m=>`<option>${m}</option>`).join('')}</select>
+<label for="fd">Meal date</label><input type="date" id="fd" value="${today()}" max="${today()}">
+<label>Rating</label><div class="stars" id="stars" role="radiogroup" aria-label="Rating">${[1,2,3,4,5].map(i=>`<button role="radio" aria-label="${i} star ${LBL[i-1]}" onclick="setRate(${i})">★</button>`).join('')}</div><div class="mut" id="rl">Select a rating</div>
+<label for="fc">Category</label><select id="fc">${CATS.map(c=>`<option>${c}</option>`).join('')}</select>
+<label for="fx">Comments (optional)</label><textarea id="fx" maxlength="600" rows="3" oninput="$('cc').textContent=this.value.length"></textarea><div class="mut"><span id="cc">0</span>/600</div>
+<p class="err" id="fe"></p><button class="btn" onclick="sendFb()">Submit feedback</button><p id="fo" style="color:var(--ok)"></p></div>
+<h2 class="mt">Your previous feedback</h2><div class="card">${l.length?tbl(['Meal','Mess','Date','Rating','Category','Comments','Submitted'],l.map(f=>[f.meal,f.mess,f.date,'★'.repeat(f.r),f.cat,esc(f.txt||'—'),fmt(f.t)])):'<p class="mut">No feedback yet. Rate a meal above to get started.</p>'}</div>`},
+prof(){return`<h1>My Profile</h1>${demo('sample student data.')}<div class="card" style="max-width:480px">${[['Name',ME.name],['Student ID',ME.id],['Department',ME.dept],['Academic year',ME.year],['Hostel',ME.block],['Mess plan',ME.plan]].map(r=>`<div class="row" style="justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bd)"><span class="mut">${r[0]}</span><b>${r[1]}</b></div>`).join('')}</div>`},
+set(){return setP()},
+help(){return`<h1>Help</h1><div class="card" style="max-width:640px"><ul style="padding-left:18px"><li><b>Select a mess:</b> use the North/South selector in the header.</li><li><b>Scan QR:</b> open Scan QR, choose the meal, then scan the code at the counter.</li><li><b>Meal history:</b> see every check-in under Meal History.</li><li><b>Feedback:</b> choose a meal, give stars, pick a category and submit.</li><li><b>Support:</b> messhelp@college.example</li></ul></div>`}},
+chief:{
+menu(){draft=draft||{meal:'Lunch',date:today(),items:null};draft.items=draft.items||[...menuOf(S.mess,draft.meal,draft.date)];return menuP()},
+att(){return`<h1>Meal Attendance</h1><p class="mut">${S.mess}. Attendance is created only by verified scans; it can't be edited here.</p><div class="card mt"><div class="row"><input id="as" placeholder="Search name or ID" oninput="attF()" style="flex:2"><select id="am" onchange="attF()"><option value="">All meals</option>${M.map(m=>`<option>${m}</option>`).join('')}</select><select id="aq" onchange="attF()"><option value="">All scans</option><option value="ok">Successful</option><option value="rej">Rejected</option></select><input type="date" id="ad" onchange="attF()"></div><div id="at" class="mt"></div></div>`},
+stu(){return`<h1>Student Records</h1>${demo('sample records.')}<div class="card"><input id="ss" placeholder="Search name or ID" oninput="stuF()"><div id="st" class="mt"></div></div>`},
+fb(){const l=DB.fb.filter(f=>f.mess==S.mess);return`<h1>Menu Feedback</h1><p class="mut">${S.mess}. Read-only: ratings and comments can't be changed.</p><div class="card"><div class="row"><select id="fmf" onchange="fbF()"><option value="">All meals</option>${M.map(m=>`<option>${m}</option>`).join('')}</select><select id="frf" onchange="fbF()"><option value="">All ratings</option>${[5,4,3,2,1].map(i=>`<option value="${i}">${i} ★</option>`).join('')}</select><input type="date" id="fdf" onchange="fbF()" aria-label="Date"></div><div id="fl" class="mt"></div></div>`},
+inv(){return`<h1>Inventory</h1><p class="mut">${S.mess}. Sample stock.</p><div class="card">${tbl(['Item','Quantity','Minimum','Status','Update'],DB.inv.map((i,x)=>({i,x})).filter(o=>o.i.m==S.mess).map(o=>[o.i.n,o.i.q+' '+o.i.u,o.i.min,o.i.q<o.i.min?tag('er','Low stock'):tag('ok','OK'),`<input type="number" min="0" value="${o.i.q}" style="width:90px" onchange="DB.inv[${o.x}].q=+this.value;save();go('inv')" aria-label="Quantity of ${o.i.n}">`]))}</div>`},
+set(){return setP()}}};
+function setP(){return`<h1>Settings</h1><div class="card" style="max-width:480px"><p>Theme: <b>${document.documentElement.dataset.theme}</b> <button class="btn o" onclick="toggleTheme()">Switch to ${document.documentElement.dataset.theme=='dark'?'light':'dark'}</button></p><p class="mut">Your choice is saved on this device and applies to both portals.</p><p class="mut">Demo data and feedback are stored in this browser.</p><button class="btn r mt" onclick="if(confirm('Reset all demo data?')){DB=seed();save();go('set')}">Reset demo data</button></div>`}
+function hist(l){return tbl(['Date','Meal','Time','Mess','Status'],l.map(a=>[new Date(a.t).toLocaleDateString(),a.meal,new Date(a.t).toLocaleTimeString([], {timeStyle:'short'}),a.mess,a.st=='ok'?tag('ok','Verified'):tag('er','Rejected')]))}
+function attT(l){return tbl(['Student ID','Name','Meal','Date and time','Mess','Status'],l.map(a=>[a.id,esc(a.name),a.meal,fmt(a.t),a.mess,a.st=='ok'?tag('ok','Verified'):tag('er','Rejected')]))}
+function sim(valid){const m=$('sm').value,w=WIN[m],ok=(t,x)=>$('sr').innerHTML=`<div class="res ${t}"><div style="font-size:48px">${t=='ok'?'✓':'✕'}</div><b>${x}</b><div>${m} · ${S.mess}</div></div>`;
+let st='ok',msg='Meal verified. '+m+' recorded.';
+if(!valid){st='rej';msg='Invalid QR code. Scan the code shown at the mess counter.'}
+else if(done(m)){st='rej';msg='Already scanned. You have already taken today\'s '+m.toLowerCase()+'.'}
+else if(!$('ign').checked&&(nowMin()<w[0]||nowMin()>w[1])){st='rej';msg='Outside the meal window ('+WT[m]+').'}
+if(st=='ok'||!valid){DB.att.push({id:ME.id,name:ME.name,meal:m,mess:S.mess,st:st,t:Date.now()});save()}
+ok(st=='ok'?'ok':'bad',msg);$('sr').insertAdjacentHTML('beforeend','<button class="btn o mt" onclick="$(\'sr\').innerHTML=\'\'">Scan again</button>')}
+function setRate(i){rate=i;[...$('stars').children].forEach((b,x)=>b.classList.toggle('on',x<i));$('rl').textContent=LBL[i-1]}
+function sendFb(){if(!rate){$('fe').textContent='Choose a star rating before submitting.';return}
+if(!$('fd').value){$('fe').textContent='Choose the meal date.';return}
+if($('fd').value>today()){$('fe').textContent='Meal date cannot be in the future.';return}
+const ms=$('fmess').value;DB.fb.push({mess:ms,sid:ME.id,meal:$('fm').value,date:$('fd').value,r:rate,cat:$('fc').value,txt:$('fx').value.trim(),t:Date.now()});save();go('fb');$('fo').textContent='Feedback submitted for '+ms+'. Thank you.'}
+function menuP(){const pub=menuOf(S.mess,draft.meal,draft.date);return`<h1>Menu Management</h1><p class="mut">${S.mess}</p><div class="card" style="max-width:560px"><div class="row"><select id="mm" onchange="draft.meal=this.value;draft.items=null;go('menu')">${M.map(m=>`<option ${m==draft.meal?'selected':''}>${m}</option>`).join('')}</select><input type="date" id="md" value="${draft.date}" onchange="draft.date=this.value;draft.items=null;go('menu')"></div>
+<label>Items</label>${draft.items.map((x,i)=>`<div class="row mt" style="flex-wrap:nowrap;margin-top:6px"><input value="${esc(x)}" oninput="draft.items[${i}]=this.value" aria-label="Item ${i+1}"><button class="btn o" onclick="draft.items.splice(${i},1);go('menu')" aria-label="Remove item">✕</button></div>`).join('')}
+<div class="row mt"><button class="btn o" onclick="draft.items.push('');go('menu')">Add item</button><button class="btn" onclick="pubMenu()">Save and publish</button></div><p class="err" id="me"></p><p id="mo" style="color:var(--ok)"></p></div>
+<h2 class="mt">Published (${S.mess}, ${draft.meal}, ${draft.date})</h2><div class="card">${pub.length?esc(pub.join(', ')):'<span class="mut">Nothing published yet.</span>'}</div>`}
+function pubMenu(){const it=draft.items.map(x=>x.trim()).filter(Boolean);if(!it.length){$('me').textContent='Add at least one menu item.';return}
+DB.menus[S.mess+'|'+draft.date+'|'+draft.meal]=it;draft.items=it;save();go('menu');$('mo').textContent='Published the '+draft.meal+' menu for '+S.mess+'.'}
+function attF(){const q=$('as').value.toLowerCase(),m=$('am').value,s=$('aq').value,d=$('ad').value;
+$('at').innerHTML=attT(DB.att.filter(a=>a.mess==S.mess&&(!m||a.meal==m)&&(!s||a.st==s)&&(!d||localDate(new Date(a.t))==d)&&(a.name.toLowerCase().includes(q)||a.id.toLowerCase().includes(q))).reverse())}
+function stuF(){const q=$('ss').value.toLowerCase();$('st').innerHTML=tbl(['Student ID','Name','Dept','Plan','Verified meals'],DB.stu.filter(s=>s[0].toLowerCase().includes(q)||s[1].toLowerCase().includes(q)).map(s=>[s[0],s[1],s[2],tag('ok','Active'),DB.att.filter(a=>a.id==s[0]&&a.st=='ok'&&a.mess==S.mess).length]))}
+function fbF(){const m=$('fmf').value,r=$('frf').value,d=$('fdf').value,l=DB.fb.filter(f=>f.mess==S.mess&&(!m||f.meal==m)&&(!r||f.r==r)&&(!d||f.date==d));
+const dist=[5,4,3,2,1].map(i=>{const n=l.filter(x=>x.r==i).length;return`<div class="row" style="flex-wrap:nowrap"><span style="width:40px">${i} ★</span><div class="bar" style="flex:1"><i style="width:${l.length?n*100/l.length:0}%"></i></div><b>${n}</b></div>`}).join('');
+$('fl').innerHTML=(l.length?`<p><b>Average ${(l.reduce((s,x)=>s+x.r,0)/l.length).toFixed(1)} ★</b> · ${l.length} reviews</p>${dist}`:'')+tbl(['Student','Meal','Date','Rating','Category','Comments','Submitted'],l.slice().reverse().map(f=>[f.sid,f.meal,f.date,'★'.repeat(f.r),f.cat,esc(f.txt||'—'),fmt(f.t)]))}
+A={att:attF,stu:stuF,fb:()=>S.role=='chief'&&fbF()};
+const IO='IntersectionObserver' in window?new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){const t=e.target;t.classList.add('in');IO.unobserve(t);setTimeout(()=>t.style.transitionDelay='',800)}}),{threshold:.08}):null;
+function reveal(){if(!IO||matchMedia('(prefers-reduced-motion:reduce)').matches)return;$('pg').querySelectorAll('.card').forEach((c,i)=>{c.classList.add('rv');c.style.transitionDelay=(i%4)*60+'ms';IO.observe(c)})}
+addEventListener('keydown',e=>{if(e.key=='Escape')menu(0)});matchMedia('(min-width:801px)').addEventListener('change',()=>menu(0));
+let ly=0;addEventListener('scroll',()=>{const y=scrollY;if(Math.abs(y-ly)<8)return;$('hd').classList.toggle('hide',y>ly&&y>80&&!$('side').classList.contains('open'));ly=y},{passive:true});
+// ---- Member 4: manager dashboard wiring. Dashboard/Prediction/Reports pages now live in web/dashboard.js ----
+function localDash(){const f=DB.fb.filter(x=>x.mess==S.mess),low=DB.inv.filter(i=>i.m==S.mess&&i.q<i.min);
+return`<div class="card mt"><div class="sm-h"><h2>Inventory &amp; feedback</h2>${tag('wn','Demo data (this browser)')}</div><p class="mut">Sample inventory and feedback stored in this browser only. Not connected to the backend.</p><h2>Low stock</h2>${low.length?low.map(i=>`<div>${tag('wn','Low')} ${esc(i.n)}: ${i.q}${esc(i.u)} (min ${i.min})</div>`).join(''):'<p class="mut">No low-stock items.</p>'}<h2 class="mt">Feedback</h2><p>${f.length?'Avg '+(f.reduce((s,x)=>s+x.r,0)/f.length).toFixed(1)+' ★ from '+f.length+' reviews':'<span class="mut">No feedback yet.</span>'}</p></div><div class="row mt"><button class="btn" onclick="go('menu')">Menu management</button><button class="btn o" onclick="go('att')">Attendance records</button></div>`}
+function localRep(){const r=['North Mess','South Mess'].map(m=>[m,...M.map(x=>DB.att.filter(a=>a.mess==m&&a.meal==x&&a.st=='ok').length)]);
+return`<div class="card mt"><div class="sm-h"><h2>Verified meals by mess and meal</h2>${tag('wn','Demo data (this browser)')}</div>${tbl(['Mess',...M],r)}</div>`}
+if(window.SmartMessDashboard)SmartMessDashboard.install({P,A,config:window.SMART_MESS_CONFIG,mess:()=>S.mess,uid:()=>S.uid,today,localExtras:localDash,localReportExtras:localRep});
+start();
+</script></body></html>

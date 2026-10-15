@@ -1,0 +1,18 @@
+{
+  "name": "smart-mess",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "mock": "node mock/mock-api.js",
+    "demo": "node scripts/demo.js",
+    "check": "node scripts/check.js",
+    "test": "node --test test/calc.test.js test/api.test.js test/dashboard.test.js test/static.test.js test/ml-adapter.test.js",
+    "test:e2e": "node --test --test-concurrency=1 test/e2e.test.js",
+    "test:all": "npm run check && npm test && npm run test:e2e",
+    "ml-proxy": "node adapters/ml-proxy.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.56.0"
+  }
+}

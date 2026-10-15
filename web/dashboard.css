@@ -1,0 +1,38 @@
+/* Manager dashboard styles (Member 4). Uses the theme variables defined in index.html. */
+.sm-h{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.sm-h h2{margin:0}
+.kpi .lbl{display:flex;justify-content:space-between;gap:8px;align-items:center;color:var(--mut);font-size:14px}
+.kpi .note{font-size:12px;color:var(--wtx);margin-top:2px}
+.unav{color:var(--mut);font-weight:600;font-size:16px}
+.banner{border-radius:8px;padding:8px 12px;font-size:13px;margin-bottom:12px;border:1px solid var(--bd);display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.banner.er{background:var(--erbg);color:var(--er)}
+.banner.wn{background:var(--wnbg);color:var(--wtx)}
+.banner.ok{background:var(--okbg);color:var(--ok)}
+.banner.n{background:var(--card);color:var(--sec)}
+.banner .btn{min-height:32px;padding:4px 12px;font-size:13px}
+.syn{background:var(--dbg);color:var(--dtx);border:2px dashed var(--wn);border-radius:8px;padding:8px 12px;font-size:13px;font-weight:600;margin-bottom:12px}
+.meal .bar{margin:8px 0}
+.meal .bar.over i{background:var(--wn)}
+.meal dl{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:14px}
+.meal dt{color:var(--mut)}.meal dd{margin:0;text-align:right;font-weight:600}
+.filters{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+.filters label{margin:0 0 4px}.filters>div{min-width:140px;flex:1}
+.filters .err{width:100%}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--sec);margin:4px 0}
+.legend .sw{display:inline-block;width:22px;height:0;border-top:3px solid;margin-right:6px;vertical-align:middle}
+.sw.s1,.ln.s1{border-color:var(--pri);stroke:var(--pri)}
+.sw.s2,.ln.s2{border-color:var(--ok);stroke:var(--ok)}
+.sw.dsh,.ln.dsh{border-top-style:dashed;stroke-dasharray:7 5}
+.ln{fill:none;stroke-width:2.5}
+.dot.s1{fill:var(--pri)}.dot.s2{fill:var(--ok)}
+.bar-s1{fill:var(--pri)}.bar-s2{fill:var(--ok)}
+svg.chart{width:100%;height:auto;display:block}
+svg.chart text{fill:var(--mut);font-size:11px}
+svg.chart .grid{stroke:var(--bd);stroke-width:1}
+.mono-num{font-variant-numeric:tabular-nums}
+td.num,th.num{text-align:right}
+@media(max-width:800px){td.num,th.num{text-align:inherit}.filters>div{min-width:100%}}
+.meal dl.stack{grid-template-columns:1fr;gap:0}
+.meal dl.stack dt{margin-top:6px;font-size:12px}
+.meal dl.stack dd{text-align:left;font-weight:500;word-break:break-word}
+.fc-warn{margin:8px 0 0;padding:6px 8px 6px 22px;background:var(--wnbg);color:var(--wtx);border-radius:8px;font-size:12px}
