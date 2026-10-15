@@ -62,11 +62,20 @@ REQUIRE_XGB_BEATS_BASELINE = os.getenv("REQUIRE_XGB_BEATS_BASELINE", "1") == "1"
 HISTORY_SOURCE = os.getenv("HISTORY_SOURCE", "csv")  # csv | postgres
 HISTORY_CSV = os.getenv("HISTORY_CSV", str(DATA_RAW_DIR / "meal_history.csv"))
 CALENDAR_CSV = os.getenv("CALENDAR_CSV", "")
-HISTORY_SQL = os.getenv(
-    "HISTORY_SQL",
-    "SELECT mess_id, date, meal_type, served_count AS served_meals "
-    "FROM mess_usage WHERE served_count IS NOT NULL",
-)
+HISTORY_SQL = """
+SELECT
+    mess_id,
+    meal_date AS date,
+    meal_period AS meal_type,
+    COUNT(*) AS served_meals
+FROM meal_logs
+GROUP BY
+    mess_id,
+    meal_date,
+    meal_period
+ORDER BY
+    meal_date
+"""
 HISTORY_CACHE_SECONDS = int(os.getenv("HISTORY_CACHE_SECONDS", "300"))
 
 
