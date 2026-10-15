@@ -1,0 +1,147 @@
+{
+  "version": "xgb_v4",
+  "trained_at": "2026-10-15T11:32:18.323285+00:00",
+  "data_label": "synthetic",
+  "feature_columns": [
+    "mess_code",
+    "meal_code",
+    "dow",
+    "is_weekend",
+    "month",
+    "day_of_month",
+    "lag_1",
+    "lag_2",
+    "lag_7",
+    "roll_mean_3",
+    "roll_mean_7",
+    "roll_mean_14",
+    "roll_mean_30",
+    "roll_std_7",
+    "momentum_7_30",
+    "same_wd_mean_4"
+  ],
+  "category_maps": {
+    "mess_id": {
+      "north": 0,
+      "south": 1
+    },
+    "meal_type": {
+      "breakfast": 0,
+      "dinner": 1,
+      "lunch": 2
+    }
+  },
+  "n_days": 240,
+  "n_supervised_rows": 1422,
+  "date_min": "2026-02-17",
+  "date_max": "2026-10-14",
+  "default_safety_buffer": 0.02,
+  "objective": "reg:squarederror",
+  "optional_columns_used": [],
+  "params": {
+    "n_estimators": 1000,
+    "learning_rate": 0.05,
+    "max_depth": 4,
+    "min_child_weight": 5,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "reg_lambda": 1.0,
+    "tree_method": "hist"
+  },
+  "best_iteration": 131,
+  "metrics": {
+    "val": {
+      "7-Day Average": {
+        "n": 216,
+        "mae": 33.16203703703704,
+        "rmse": 50.3482608775497,
+        "bias": -0.6514550264550252,
+        "r2": 0.7838337299406755,
+        "mape_pct": 6.323708628605919
+      },
+      "Seasonal naive (lag 7)": {
+        "n": 216,
+        "mae": 34.398148148148145,
+        "rmse": 70.06273643697509,
+        "bias": -0.28703703703703703,
+        "r2": 0.5814058329379699,
+        "mape_pct": 6.408075935663862
+      },
+      "XGBoost": {
+        "n": 216,
+        "mae": 25.32868547792788,
+        "rmse": 48.76669071611128,
+        "bias": 3.1062719557020397,
+        "r2": 0.7972011198878548,
+        "mape_pct": 4.916265335231848
+      }
+    },
+    "test": {
+      "7-Day Average": {
+        "n": 216,
+        "mae": 26.63095238095238,
+        "rmse": 42.11822659298309,
+        "bias": -0.8055555555555542,
+        "r2": 0.8362339818664473,
+        "mape_pct": 5.157449776483935
+      },
+      "Seasonal naive (lag 7)": {
+        "n": 216,
+        "mae": 21.88888888888889,
+        "rmse": 47.01122797327842,
+        "bias": -1.037037037037037,
+        "r2": 0.7959733836877451,
+        "mape_pct": 4.083444319464258
+      },
+      "XGBoost": {
+        "n": 216,
+        "mae": 18.974774113407843,
+        "rmse": 35.7980074647706,
+        "bias": 2.1118310998987266,
+        "r2": 0.881695478143338,
+        "mape_pct": 3.5653690962700137
+      }
+    }
+  },
+  "cv": [
+    {
+      "fold": 1,
+      "test_from": "2026-04-09",
+      "n_test": 288,
+      "xgb_mae": 18.88749779595269,
+      "baseline_mae": 24.644841269841272
+    },
+    {
+      "fold": 2,
+      "test_from": "2026-05-27",
+      "n_test": 282,
+      "xgb_mae": 21.432652033812612,
+      "baseline_mae": 29.85410334346504
+    },
+    {
+      "fold": 3,
+      "test_from": "2026-07-13",
+      "n_test": 282,
+      "xgb_mae": 25.381241818691823,
+      "baseline_mae": 30.123606889564336
+    },
+    {
+      "fold": 4,
+      "test_from": "2026-08-29",
+      "n_test": 282,
+      "xgb_mae": 20.00038688064467,
+      "baseline_mae": 25.1144883485309
+    }
+  ],
+  "residual_quantiles": {
+    "q10": -24.83184814453125,
+    "q90": 30.368331909179688
+  },
+  "split": {
+    "train_rows": 990,
+    "val_rows": 216,
+    "test_rows": 216
+  },
+  "mode": "xgboost",
+  "mode_reason": "XGBoost test MAE 18.97 vs 7-day average 26.63"
+}
