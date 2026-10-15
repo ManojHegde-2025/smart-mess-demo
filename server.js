@@ -10,8 +10,16 @@ const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8000';
 function proxy(req, res) {
   let target;
   try { target = new URL(req.url, BACKEND_URL); } catch (e) { res.writeHead(400); return res.end('Bad URL'); }
-  const up = http.request(target, { method: req.method, headers: { ...req.headers, host: target.host } }, (upRes) => {
-    res.writeHead(upRes.statusCode, upRes.headers);
+  const transport = target.protocol === 'https:' ? https : http;
+
+const up = transport.request(target, {
+  method: req.method,
+  headers: {
+    ...req.headers,
+    host: target.host
+  }
+}, (upRes) => {
+  res.writeHead(upRes.statusCode, upRes.headers);
     upRes.pipe(res);
   });
   up.on('error', () => {
