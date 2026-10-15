@@ -64,16 +64,17 @@ HISTORY_CSV = os.getenv("HISTORY_CSV", str(DATA_RAW_DIR / "meal_history.csv"))
 CALENDAR_CSV = os.getenv("CALENDAR_CSV", "")
 HISTORY_SQL = """
 SELECT
-    m.code AS mess_id,
+    LOWER(m.code) AS mess_id,
     ml.meal_date AS date,
-    ml.meal_period AS meal_type,
+    LOWER(ml.meal_period) AS meal_type,
     COUNT(*) AS served_meals
 FROM meal_logs AS ml
 JOIN messes AS m ON m.id = ml.mess_id
+WHERE m.code IS NOT NULL
 GROUP BY
-    m.code,
+    LOWER(m.code),
     ml.meal_date,
-    ml.meal_period
+    LOWER(ml.meal_period)
 ORDER BY
     ml.meal_date
 """
