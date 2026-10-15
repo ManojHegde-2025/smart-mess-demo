@@ -64,17 +64,18 @@ HISTORY_CSV = os.getenv("HISTORY_CSV", str(DATA_RAW_DIR / "meal_history.csv"))
 CALENDAR_CSV = os.getenv("CALENDAR_CSV", "")
 HISTORY_SQL = """
 SELECT
-    mess_id,
-    meal_date AS date,
-    meal_period AS meal_type,
+    m.code AS mess_id,
+    ml.meal_date AS date,
+    ml.meal_period AS meal_type,
     COUNT(*) AS served_meals
-FROM meal_logs
+FROM meal_logs AS ml
+JOIN messes AS m ON m.id = ml.mess_id
 GROUP BY
-    mess_id,
-    meal_date,
-    meal_period
+    m.code,
+    ml.meal_date,
+    ml.meal_period
 ORDER BY
-    meal_date
+    ml.meal_date
 """
 HISTORY_CACHE_SECONDS = int(os.getenv("HISTORY_CACHE_SECONDS", "300"))
 
