@@ -1,6 +1,9 @@
 // Static server + same-origin proxy to the backend. No dependencies. Run: node server.js
 // /api/v1/* is forwarded to BACKEND_URL, so the browser never talks to the backend directly.
-const http = require('http'), fs = require('fs'), path = require('path');
+const http = require('http');
+const https = require('https');
+const fs = require('fs');
+const path = require('path');
 const PORT = process.env.PORT || 3000;
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8000';
 
