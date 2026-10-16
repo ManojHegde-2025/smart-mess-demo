@@ -12,6 +12,7 @@ from sqlalchemy import distinct, func, select
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.db_diagnostics import database_diagnostics
 from app.deps import require_manager
 from app.ml_client import MlSettings, evaluate_pairs, predict_one
 from app.mess import MEAL_PERIODS, normalize_meal, resolve_mess
@@ -34,6 +35,17 @@ EXCEPTION_TYPES = {
 
 
 # ---------------------------------------------------------------- helpers
+
+@router.get("/manager/diagnostics/database")
+def manager_database_diagnostics(
+    _: Student = Depends(require_manager),
+    db: Session = Depends(get_db),
+):
+    """Temporary read-only database identity check; manager access required."""
+    try:
+        return database_diagnostics(db)
+    except ValueError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
 
 def _today() -> date:
     return datetime.now(IST).date()
