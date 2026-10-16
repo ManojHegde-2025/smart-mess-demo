@@ -64,6 +64,17 @@ def model_info():
                                    "n_days", "feature_columns", "metrics", "cv", "default_safety_buffer")}
 
 
+@app.get("/history-diagnostics", dependencies=[Depends(require_key)])
+def history_diagnostics():
+    """Safe aggregate diagnostics for the configured history source; no raw records or DSN."""
+    try:
+        return _state["history"].diagnostics()
+    except (ValueError, KeyError) as e:
+        raise HTTPException(400, str(e))
+    except FileNotFoundError as e:
+        raise HTTPException(503, f"history source unavailable: {e}")
+
+
 @app.post("/predict", dependencies=[Depends(require_key)])
 def predict(req: PredictRequest):
     try:
