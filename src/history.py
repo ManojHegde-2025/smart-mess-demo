@@ -27,8 +27,10 @@ class CsvHistoryProvider:
 
 
 class PostgresHistoryProvider:
-    """Reads aggregated usage (mess_id, date, meal_type, served_meals[, active_students, ...]) via SQL.
-    Needs DATABASE_URL (e.g. the Supabase *read-only* connection string) and `pip install sqlalchemy psycopg2-binary`."""
+    """Reads aggregated meal-log attendance via SQL into the model's canonical columns.
+
+    Attendance scans are a proxy for demand, not a verified count of meals cooked/served.
+    """
 
     def __init__(self, dsn: str | None = None, sql: str = C.HISTORY_SQL):
         self.dsn, self.sql = dsn or os.environ["DATABASE_URL"], sql
@@ -47,13 +49,56 @@ class CachedProvider:
     def load(self) -> pd.DataFrame:
         if self._df is None or time.time() - self._at > self.ttl:
             self._df, self._at = self.inner.load(), time.time()
-            log.info("History refreshed: %d rows", len(self._df))
+            try:
+                summary = _history_summary(self._df)
+            except Exception as exc:  # keep data-loading behavior independent of optional diagnostics
+                log.warning("History refreshed: %d rows; aggregate diagnostics unavailable (%s)",
+                            len(self._df), type(exc).__name__)
+                return self._df
+            log.info(
+                "History refreshed: %d rows; columns=%s date_range=%s..%s groups=%s",
+                summary["row_count"], summary["columns"], summary["date_min"],
+                summary["date_max"], summary["groups"],
+            )
         return self._df
 
     def invalidate(self) -> None:
         self._df = None
 
+    def diagnostics(self) -> dict:
+        """Return aggregate-only metadata for operators; never expose rows or connection details."""
+        df = self.load()
+        return _history_summary(df)
+
 
 def get_history_provider() -> CachedProvider:
     inner = PostgresHistoryProvider() if C.HISTORY_SOURCE == "postgres" else CsvHistoryProvider()
     return CachedProvider(inner)
+
+
+def _history_summary(df: pd.DataFrame) -> dict:
+    """Summarize rows using only canonical columns; malformed schemas remain diagnosable."""
+    columns = [str(column) for column in df.columns]
+    missing = [column for column in C.REQUIRED_COLUMNS if column not in df.columns]
+    if missing:
+        return {"row_count": int(len(df)), "columns": columns, "date_min": None,
+                "date_max": None, "groups": [], "missing_columns": missing}
+
+    from .preprocessing import clean
+
+    cleaned, _ = clean(df)
+    by_group = (
+        cleaned.groupby([C.MESS, C.MEAL], dropna=False)[C.TARGET]
+        .agg(row_count="size", total_count="sum")
+        .reset_index()
+    )
+    return {
+        "row_count": int(len(df)), "columns": columns,
+        "date_min": str(cleaned[C.DATE].min().date()) if len(cleaned) else None,
+        "date_max": str(cleaned[C.DATE].max().date()) if len(cleaned) else None,
+        "groups": [
+            {"mess_id": str(row[C.MESS]), "meal_type": str(row[C.MEAL]),
+             "row_count": int(row["row_count"]), "total_count": int(row["total_count"])}
+            for _, row in by_group.iterrows()
+        ],
+    }
