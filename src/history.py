@@ -42,26 +42,63 @@ class PostgresHistoryProvider:
             return pd.read_sql(text(self.sql), con)
 
     def source_diagnostics(self) -> dict:
-        """Read-only source/join counts that localize empty results without exposing records."""
+        """Read-only database identity, relation resolution, and aggregate counts."""
         from sqlalchemy import create_engine, text
 
-        statements = {
-            "meal_logs_count": "SELECT COUNT(*) FROM meal_logs",
-            "messes_count": "SELECT COUNT(*) FROM messes",
-            "join_count": "SELECT COUNT(*) FROM meal_logs ml JOIN messes m ON m.id = ml.mess_id",
-            "unmatched_meal_logs_count": "SELECT COUNT(*) FROM meal_logs ml LEFT JOIN messes m ON m.id = ml.mess_id WHERE m.id IS NULL",
-            "null_mess_code_join_count": "SELECT COUNT(*) FROM meal_logs ml JOIN messes m ON m.id = ml.mess_id WHERE m.code IS NULL",
-        }
+        relation_types = {"r": "table", "p": "partitioned_table", "v": "view",
+                          "m": "materialized_view", "f": "foreign_table"}
         eng = create_engine(self.dsn, pool_pre_ping=True)
         with eng.connect() as con:
-            result = {name: int(con.execute(text(sql)).scalar_one()) for name, sql in statements.items()}
+            identity = con.execute(text(
+                "SELECT current_database(), current_schema(), current_user, current_schemas(true)"
+            )).one()
+            result = {
+                "current_database": identity[0],
+                "current_schema": identity[1],
+                "current_user": identity[2],
+                "current_schemas": list(identity[3] or []),
+                "relations": {},
+            }
+            for relation in ("meal_logs", "messes"):
+                resolved = con.execute(text(
+                    "SELECT c.relname, n.nspname, c.relkind "
+                    "FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace "
+                    "WHERE c.oid = to_regclass(:relation)::oid"
+                ), {"relation": relation}).one_or_none()
+                if resolved is None:
+                    result["relations"][relation] = {
+                        "resolved": False, "schema": None, "relation_type": None, "row_count": None,
+                    }
+                    continue
+                relname, schema, relkind = resolved
+                preparer = con.dialect.identifier_preparer
+                qualified = f"{preparer.quote_schema(schema)}.{preparer.quote(relname)}"
+                count = con.execute(text(f"SELECT COUNT(*) FROM {qualified}")).scalar_one()
+                result["relations"][relation] = {
+                    "resolved": True, "schema": schema,
+                    "relation_type": relation_types.get(relkind, "other"),
+                    "row_count": int(count),
+                }
+
+            # Preserve the earlier summary fields while sourcing counts from resolved relations.
+            result["meal_logs_count"] = result["relations"]["meal_logs"]["row_count"]
+            result["messes_count"] = result["relations"]["messes"]["row_count"]
+            result["join_count"] = int(con.execute(text(
+                "SELECT COUNT(*) FROM meal_logs ml JOIN messes m ON m.id = ml.mess_id"
+            )).scalar_one())
+            result["unmatched_meal_logs_count"] = int(con.execute(text(
+                "SELECT COUNT(*) FROM meal_logs ml LEFT JOIN messes m ON m.id = ml.mess_id WHERE m.id IS NULL"
+            )).scalar_one())
+            result["null_mess_code_join_count"] = int(con.execute(text(
+                "SELECT COUNT(*) FROM meal_logs ml JOIN messes m ON m.id = ml.mess_id WHERE m.code IS NULL"
+            )).scalar_one())
             result["grouped_counts"] = [
                 {"mess_id": row[0], "meal_type": row[1], "row_count": int(row[2])}
                 for row in con.execute(text(
-                    "SELECT LOWER(BTRIM(m.code)), LOWER(BTRIM(ml.meal_period)), COUNT(*) "
+                    "SELECT LOWER(TRIM(m.code)), LOWER(TRIM(ml.meal_period)), COUNT(*) "
                     "FROM meal_logs ml JOIN messes m ON m.id = ml.mess_id "
                     "WHERE m.code IS NOT NULL "
-                    "GROUP BY LOWER(BTRIM(m.code)), LOWER(BTRIM(ml.meal_period)) "
+                    "GROUP BY LOWER(TRIM(m.code)), LOWER(TRIM(ml.meal_period)) "
                     "ORDER BY 1, 2"
                 ))
             ]
