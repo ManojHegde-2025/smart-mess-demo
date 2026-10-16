@@ -41,6 +41,38 @@ class PostgresHistoryProvider:
         with eng.connect() as con:
             return pd.read_sql(text(self.sql), con)
 
+    def source_diagnostics(self) -> dict:
+        """Read-only source/join counts that localize empty results without exposing records."""
+        from sqlalchemy import create_engine, text
+
+        statements = {
+            "meal_logs_count": "SELECT COUNT(*) FROM meal_logs",
+            "messes_count": "SELECT COUNT(*) FROM messes",
+            "join_count": "SELECT COUNT(*) FROM meal_logs ml JOIN messes m ON m.id = ml.mess_id",
+            "unmatched_meal_logs_count": "SELECT COUNT(*) FROM meal_logs ml LEFT JOIN messes m ON m.id = ml.mess_id WHERE m.id IS NULL",
+            "null_mess_code_join_count": "SELECT COUNT(*) FROM meal_logs ml JOIN messes m ON m.id = ml.mess_id WHERE m.code IS NULL",
+        }
+        eng = create_engine(self.dsn, pool_pre_ping=True)
+        with eng.connect() as con:
+            result = {name: int(con.execute(text(sql)).scalar_one()) for name, sql in statements.items()}
+            result["grouped_counts"] = [
+                {"mess_id": row[0], "meal_type": row[1], "row_count": int(row[2])}
+                for row in con.execute(text(
+                    "SELECT LOWER(BTRIM(m.code)), LOWER(BTRIM(ml.meal_period)), COUNT(*) "
+                    "FROM meal_logs ml JOIN messes m ON m.id = ml.mess_id "
+                    "WHERE m.code IS NOT NULL "
+                    "GROUP BY LOWER(BTRIM(m.code)), LOWER(BTRIM(ml.meal_period)) "
+                    "ORDER BY 1, 2"
+                ))
+            ]
+            result["date_min"], result["date_max"] = con.execute(text(
+                "SELECT MIN(ml.meal_date), MAX(ml.meal_date) "
+                "FROM meal_logs ml JOIN messes m ON m.id = ml.mess_id WHERE m.code IS NOT NULL"
+            )).one()
+        result["date_min"] = str(result["date_min"]) if result["date_min"] is not None else None
+        result["date_max"] = str(result["date_max"]) if result["date_max"] is not None else None
+        return result
+
 
 class CachedProvider:
     def __init__(self, inner: HistoryProvider, ttl: int = C.HISTORY_CACHE_SECONDS):
@@ -68,7 +100,10 @@ class CachedProvider:
     def diagnostics(self) -> dict:
         """Return aggregate-only metadata for operators; never expose rows or connection details."""
         df = self.load()
-        return _history_summary(df)
+        result = _history_summary(df)
+        if isinstance(self.inner, PostgresHistoryProvider):
+            result["source"] = self.inner.source_diagnostics()
+        return result
 
 
 def get_history_provider() -> CachedProvider:
