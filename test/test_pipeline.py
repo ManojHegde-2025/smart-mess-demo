@@ -184,3 +184,74 @@ def test_history_diagnostics_reports_only_aggregates_and_normalized_metadata():
     ]
     assert all("student_id" not in group for group in report["groups"])
     assert all(value not in str(report) for value in ("101", "102", "103"))
+
+
+def test_postgres_source_diagnostics_reports_identity_and_resolved_relations(monkeypatch):
+    import sqlalchemy
+    from src.history import PostgresHistoryProvider
+
+    seen = []
+
+    class Result:
+        def __init__(self, value=None, rows=()):
+            self.value, self.rows = value, rows
+
+        def one(self):
+            return self.value
+
+        def one_or_none(self):
+            return self.value
+
+        def scalar_one(self):
+            return self.value
+
+        def __iter__(self):
+            return iter(self.rows)
+
+    class Connection:
+        dialect = sqlalchemy.create_engine("sqlite://").dialect
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def execute(self, statement, params=None):
+            sql = str(statement)
+            seen.append((sql, params))
+            if "current_database()" in sql:
+                return Result(("mess_attendance", "public", "ml_readonly", ["pg_catalog", "public"]))
+            if "to_regclass" in sql:
+                relation = params["relation"]
+                return Result((relation, "public", "r"))
+            if sql.startswith("SELECT COUNT(*) FROM public."):
+                return Result(84321 if "meal_logs" in sql else 2)
+            if "JOIN messes" in sql and "COUNT(*)" in sql:
+                return Result(84321)
+            if "LEFT JOIN messes" in sql:
+                return Result(0)
+            if "m.code IS NULL" in sql:
+                return Result(0)
+            if "GROUP BY LOWER(TRIM" in sql:
+                return Result(rows=[("north", "lunch", 40000), ("south", "dinner", 44321)])
+            if "MIN(ml.meal_date)" in sql:
+                return Result(("2025-01-01", "2026-10-16"))
+            raise AssertionError(f"Unexpected diagnostic query: {sql}")
+
+    class Engine:
+        def connect(self):
+            return Connection()
+
+    monkeypatch.setattr(sqlalchemy, "create_engine", lambda *_args, **_kwargs: Engine())
+    report = PostgresHistoryProvider("postgresql://redacted").source_diagnostics()
+    assert report["current_database"] == "mess_attendance"
+    assert report["current_schema"] == "public"
+    assert report["current_user"] == "ml_readonly"
+    assert report["current_schemas"] == ["pg_catalog", "public"]
+    assert report["relations"]["meal_logs"] == {
+        "resolved": True, "schema": "public", "relation_type": "table", "row_count": 84321,
+    }
+    assert report["relations"]["messes"]["row_count"] == 2
+    assert "DATABASE_URL" not in str(report) and "postgresql://" not in str(report)
+    assert any("current_schemas(true)" in sql for sql, _ in seen)
